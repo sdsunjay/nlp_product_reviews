@@ -34,18 +34,25 @@ def load_model(filename):
     # load the model from disk
     return pickle.load(open(filename, 'rb'))
 
-def train(features, labels):
+def trainClassifiers(features, labels):
     print('starting training')
-    train_features, test_features, train_labels, test_labels = train_test_split(features, labels)
+    # train_features, test_features, train_labels, test_labels = train_test_split(features, labels)
+
+    # create training and testing vars
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
+    # print(X_train.shape, y_train.shape)
+    # print(X_test.shape, y_test.shape)
 
     # Logistic Regressions
     lr_clf = LogisticRegression()
-    lr_clf.fit(train_features, train_labels)
-    lr_clf.score(test_features, test_labels)
+    model = lr_clf.fit(X_train, y_train)
+    predictions = lr_clf.predict(X_test)
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
     print('Finished training logistic regression model 1')
-    print("Logistic Regression Classifier 1 accuracy percent:",
-            (nltk.classify.accuracy(lr_clf, test_features)) * 100)
+    print("Logistic Regression Classifier 1 accuracy percent:", (nltk.classify.accuracy(lr_clf, X_test)) * 100)
     save_model(lr_clf, 'LR_classifier')
+    exit()
 
     # Logistic Regression with Sklearn and random state
     LG_classifier = SklearnClassifier(LogisticRegression(random_state=42))
@@ -62,8 +69,7 @@ def train(features, labels):
 
     SVC_classifier = SklearnClassifier(SVC(),sparse=False).train(train_features)
     SVC_classifier.train(train_features)
-    print("C-Support Vector Classifier accuracy
-            percent:",(nltk.classify.accuracy(SVC_classifier, test_features)) * 100)
+    print("C-Support Vector Classifier accuracy percent:",(nltk.classify.accuracy(SVC_classifier, test_features)) * 100)
     save_model(NB_classifier, 'SVC_classifier')
 
     LinearSVC_classifier1 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
@@ -79,8 +85,9 @@ def train(features, labels):
     print("Linear Support Vector Classifier 3 accuracy percent:",
             (nltk.classify.accuracy(LinearSVC_classifier3, test_features)) * 100)
 
-def create_tensor(padded, model):
+def createTensor(padded, model):
     print('create_tensor')
+    # TODO: fix this, figure out why it is failing
     input_ids = torch.tensor(np.array(padded))
     with torch.no_grad():
         last_hidden_states = model(input_ids)
@@ -118,11 +125,11 @@ def something(df, text_column_name):
 	tokenizer.save_pretrained('./my_saved_model_directory/')
 
 def tokenize(df, text_column_name):
-    print('Startinh to tokenize ' + text_column_name)
-    model, tokenizer, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+    print('Starting to tokenize ' + text_column_name)
+    model, tokenizer, pretrained_weights = (ppb.DistilBertModel,ppb.DistilBertTokenizer, 'distilbert-base-uncased')
 
     ## Want BERT instead of distilBERT? Uncomment the following line:
-    # model, tokenizer, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-base-uncased')
+    # model, tokenizer, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer,'bert-large-uncased')
 
     # model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -140,8 +147,9 @@ def tokenize(df, text_column_name):
         tokenizer.save_pretrained('./my_model/')
     except:
         print('Tokenizer failed')
-        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        tokenized = tokenizer.tokenize(df[text_column_name])
+        exit()
+        # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        # tokenized = tokenizer.tokenize(df[text_column_name])
         # model.resize_token_embeddings(len(tokenizer))
 
     print('Finished tokenizing text')
@@ -149,6 +157,7 @@ def tokenize(df, text_column_name):
 
 def truncate(text):
     """Truncate the text."""
+    # TODO fix this to use a variable instead of 511
     text = (text[:511]) if len(text) > MAX_LEN else text
     return text
 
@@ -343,12 +352,12 @@ def getAllWords(lines, stop_words):
         # removePunctuationFromList(temp)
 
 
-        all_words1 = nltk.FreqDist(temp)
-        print("All Words list length : ", len(all_words1))
-        print(str(list(all_words1.keys())[:100]))
+        top_words = nltk.FreqDist(temp)
+        print("All Words list length : ", len(top_words))
+        # print(str(list(all_words1.keys())[:100]))
 
-        return list(all_words.keys())[:20000]
-        # use top 6000 words
+        # use top 20000 words
+        return list(top_words.keys())[:20000]
         # word_features = list(all_words.keys())[:6000]
         # featuresets = [(find_features(rev, word_features), category)
         #        for (rev, category) in documents]
@@ -380,35 +389,32 @@ def removeWordsNotIn(text, stop_words):
         exit()
     return final_string
 
-def addWordsIn(text, all_words):
-    length_flag = len(text) > MAX_LEN
-    # if length_flag:
-    #    print('line: ' + text)
-    words = text.split()
+def addWordsIn(text, all_words, length_flag, max_word_length):
+    count = 0
     final_string = ""
-    flag = False
     try:
+        words = text.split()
         for word in words:
             word = word.lower()
 
             if word in all_words:
+                count += 1
+                if(count == MAX_LEN-1):
+                    # if we hit max number of token, stop parsing string
+                    return final_string[:-1]
+                    # return addWordsIn(text, all_words, True, max_word_length+(max_word_length/2))
                 if length_flag:
-                    if len(word) > 4:
+                    if len(word) >= max_word_length:
                         final_string += word
                         final_string += ' '
-                        flag = True
                 else:
                     final_string += word
                     final_string += ' '
-                    flag = True
-            else:
-                flag = False
-        if(flag):
-            final_string = final_string[:-1]
+        final_string = final_string[:-1]
     except Exception as e:
         print("Error")
-        exit()
-        # type error: " + str(e))
+        # exit()
+        print("type error: " + str(e))
     return final_string
 
 def read_data(filepath):
@@ -483,15 +489,16 @@ def read_data(filepath):
     print('Getting all words')
     all_words = getAllWords(clean_text, stop_words)
     print('adding words in all_words')
-    df['clean_text'] = [addWordsIn(line, all_words) for line in df['clean_text']]
+    df['clean_text'] = [addWordsIn(line, all_words, False, 8) for line in df['clean_text']]
 
-    df["clean_text"] = df['clean_text'].apply(truncate)
+    # df["clean_text"] = df['clean_text'].apply(truncate)
     # df.text = df.text.apply(lambda x: x.lower())
     # df.text = df.text.apply(lambda x: x.translate(None, string.punctuation))
     # df.clean_text = df.clean_text.apply(lambda x: x.translate(string.digits))
     # all_words = df.clean_text.apply(get_counts)
     # df["clean_text"] = df['text'].str.replace('[^\w\s]','')
     print('Finished reading and cleaning data')
+    print('Number of rows: ' + str(len(df.index)))
     # print(df.head(30))
     return df
 
@@ -500,12 +507,12 @@ def main(training_filepath):
     df = read_data(training_filepath)
     df.clean_text.to_csv('clean_text.csv')
     # split into training, validation, and test sets
-    training, validation, test = np.array_split(df.head(900), 3)
+    training, test = np.array_split(df.head(00), 2)
     tokens,model = tokenize(training, 'clean_text')
     padded = padding(tokens)
-    features = create_tensor(padded, model)
+    features = createTensor(padded, model)
     labels = training['human_tag']
-    train(features, labels)
+    trainClassifiers(features, labels)
 
 
 if __name__ == "__main__":

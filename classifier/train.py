@@ -24,6 +24,7 @@ from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.svm import SVC, LinearSVC, NuSVC
 from sklearn.neighbors.nearest_centroid import NearestCentroid
+from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
 from sklearn.svm import LinearSVC
@@ -31,7 +32,6 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.linear_model import PassiveAggressiveClassifier
-from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import NearestCentroid
 
@@ -79,30 +79,54 @@ def trainClassifiers(features, labels):
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
 
     # Create a simple Logistic Regression classifier
-    model_name = 'Logistic Regression (solver=lbfgs)'
-    model = LogisticRegression(max_iter=200)
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model_name = 'Logistic Regression (solver=lbfgs)'
+    # model = LogisticRegression(max_iter=200)
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Create a simple Logistic Regression classifier
-    model_name = 'Logistic Regression (penalty elasticnet)'
-    model = LogisticRegression(max_iter=200, solver='saga', penalty='elasticnet')
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model_name = 'Logistic Regression (penalty elasticnet)'
+    # model = LogisticRegression(max_iter=200, solver='saga')
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Create a simple Linear SVC classifier
-    model_name = 'Linear SVC (max_iter=2000)'
-    model = LinearSVC(random_state=42, max_iter=2000)
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model_name = 'Linear SVC (max_iter=5000)'
+    # model = LinearSVC(random_state=42, max_iter=5000)
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # XGBoost
-    model = XGBClassifier()
-    model_name = 'XGBoost Classifier'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model = XGBClassifier()
+    # model_name = 'XGBoost Classifier'
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
+    # TODO - Fix this and make it work
     # Naive Bayes Classifier
-    model = NaiveBayesClassifier()
-    model_name = 'Naive Bayes Classifier'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model = NaiveBayesClassifier()
+    # model_name = 'Naive Bayes Classifier'
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
+    # GaussianNB Classifier
+    # model = GaussianNB()
+    # model_name = 'Gaussian Classifier'
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    
+    # TODO - Fix this and make it work
+    # MultinomialNB Classifier
+    # model = MultinomialNB()
+    # model_name = 'Multinomial Classifier'
+    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+
+    model = MLPClassifier(hidden_layer_sizes=(30,30,30))   
+    model_name = 'Multi-Layer Perceptron Classifier (3 layers)'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    
+    model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))   
+    model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    
+    model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))   
+    model_name = 'Multi-Layer Perceptron Classifier (10 layers)'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+ 
     # Sparse Support Vector Classifier
     model = SklearnClassifier(SVC(),sparse=False).train(train_features)
     model_name = 'Sparse Support Vector Classifier'

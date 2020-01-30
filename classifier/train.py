@@ -417,216 +417,29 @@ def removePunctuationFromList(all_words):
     all_words = [s for s in all_words if s]
     return all_words
 
-def cleanText(text):
-    """Clean up the text."""
-    try:
-        text = str(text)
-
-        # remove contactions and stop words
-        text = contractions(text)
-        # remove html entities
-        cleanr = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
-        new_text = cleanr.sub('', text.strip())
-        return re.sub(r'\s+', ' ', re.sub(r'\W+', " ", new_text))
-        # TAG_RE = re.compile(r'<[^>]+>')
-    except:
-        # source = text
-        # source = source.str.replace('[^A-Za-z]',' ')
-        # data['description'] = data['description'].str.replace('\W+',' ')
-        # source = source.str.lower()
-        # source = source.str.replace("\s\s+" , " ")
-        # source = source.str.replace('\s+[a-z]{1,2}(?!\S)',' ')
-        # source = source.str.replace("\s\s+" , " ")
-        print("An exception occurred with: " + text)
-        return str(text)
-
-def getAllWords(lines, stop_words):
-    all_words = {}
-    try:
-        for line in lines:
-            words = line.split()
-            for word in words:
-                if word not in stop_words:
-                    all_words[word] = True
-        temp = all_words.keys()
-        # removePunctuationFromList(temp)
-
-
-        top_words = nltk.FreqDist(temp)
-        print("All Words list length : ", len(top_words))
-        # print(str(list(all_words1.keys())[:100]))
-
-        # use top 20000 words
-        return list(top_words.keys())[:20000]
-        # word_features = list(all_words.keys())[:6000]
-        # featuresets = [(find_features(rev, word_features), category)
-        #        for (rev, category) in documents]
-        # print("Feature sets list length : ", len(featuresets))
-    except Exception as e:
-        print("type error: " + str(e))
-        exit()
-
-
-
-def removeWordsNotIn(text, stop_words):
-    words = text.split()
-    final_string = ""
-    flag = False
-    try:
-        for word in words:
-            word = word.lower()
-            if word not in stop_words:
-                final_string += word
-                final_string += ' '
-                flag = True
-            else:
-                flag = False
-        if(flag):
-            final_string = final_string[:-1]
-    except Exception as e:
-        # print("type error: " + str(e))
-        print("type error")
-        exit()
-    return final_string
-
-def shortenText(text, all_words):
-    count = 0
-    final_string = ""
-    try:
-        words = text.split()
-        for word in words:
-            word = word.lower()
-            if len(word) > 7:
-                if word in all_words:
-                    count += 1
-                    if(count == MAX_WORDS-1):
-                        # if we hit max number of token, stop parsing string
-                        return final_string[:-1]
-                    else:
-                        final_string += word
-                        final_string += ' '
-        final_string = final_string[:-1]
-    except Exception as e:
-        print("Error")
-        # exit()
-        print("type error: " + str(e))
-    return final_string
-
-
-def addWordsIn(text, all_words):
-    """ Also does truncation """
-    # print('Adding only the top words')
-    count = 0
-    final_string = ""
-    try:
-        words = text.split()
-        for word in words:
-            word = word.lower()
-
-            if word in all_words:
-                count += 1
-                if(count == MAX_WORDS-1):
-                    return shortenText(text, all_words)
-                    # if we hit max number of token, stop parsing string
-                    # return final_string[:-1]
-                else:
-                    final_string += word
-                    final_string += ' '
-        final_string = final_string[:-1]
-    except Exception as e:
-        print("Error")
-        # exit()
-        print("type error: " + str(e))
-    return final_string
-
 def read_data(filepath):
     """Read the CSV from disk."""
     df = pd.read_csv(filepath, delimiter=',')
 
-    stop_words = ["will", "done", "goes","let", "know", "just", "put" "also",
-            "got", "can", "get" "said", "mr", "mrs", "one", "two", "three",
-            "four", "five", "i", "me", "my", "myself", "we", "our",
-            "ours","ourselves","you","youre","your","yours","yourself","yourselves","he","him","his","himself","she","her","hers","herself","it","its","itself","they","them","their","theirs","themselves","what","which","who","whom","this","that","these","those","am","is","are","was","were","be","been","being","have","has","had","having","do","does","did","doing","a","an","the","and","but","if","or","because","as","until","while","of","at","by","for","with","about","against","between","into","through","during","before","after","above","below","to","from","up","down","in","out","on","off","over","under","again","further","then","once","here","there","when","where","why","how",
-            "all","any","both","each","few","more","most","other","some","such",
-            "can", "will",
-            "just",
-            "don",
-            "don't",
-            "should",
-            "should've",
-            "now",
-            "d",
-            "ll",
-            "m",
-            "o",
-            "re",
-            "ve",
-            "y",
-            "ain",
-            "aren",
-            "aren't",
-            "couldn",
-            "couldn't",
-            "didn",
-            "didn't",
-            "doesn",
-            "doesn't",
-            "hadn",
-            "hadn't",
-            "hasn",
-            "hasn't",
-            "haven",
-            "haven't",
-            "isn",
-            "isn't",
-            "ma",
-            "mightn",
-            "mightn't",
-            "mustn",
-            "mustn't",
-            "needn",
-            "needn't",
-            "shan",
-            "shan't",
-            "shouldn"
-            "shouldn't",
-            "wasn",
-            "wasn't",
-            "weren",
-            "weren't",
-    "won",
-"won't",
-"wouldn",
-"wouldn't"]
-
-    # pandas drop columns using list of column names
-    df = df.drop(['ID', 'doc_id', 'date', 'title', 'star_rating'], axis=1)
-    print('Cleaning text')
-    df["clean_text"] = df['text'].apply(cleanText)
-    print('Removing words in stop words')
-    df['clean_text'] = [removeWordsNotIn(line, stop_words) for line in df['clean_text']]
-
-    clean_text = df["clean_text"].tolist()
-    # print(clean_text[:10])
-    print('Getting all words')
-    all_words = getAllWords(clean_text, stop_words)
-    # print('adding words in all_words')
-    df['clean_text'] = [addWordsIn(line, all_words) for line in df['clean_text']]
-
-    # df.text = df.text.apply(lambda x: x.translate(None, string.punctuation))
-    # df.clean_text = df.clean_text.apply(lambda x: x.translate(string.digits))
-    # df["clean_text"] = df['text'].str.replace('[^\w\s]','')
-    print('Finished reading and cleaning data')
     print('Number of rows in dataframe: ' + str(len(df.index)))
-    # print(df.head(30))
     return df
 
-def main(training_filepath):
+def main():
     """Main function of the program."""
-    df = read_data(training_filepath)
-    # df.clean_text.to_csv('clean_text.csv')
+    # Specify path
+    training_filepath = 'data/clean_training.csv'
+    testing_filepath = 'data/clean_testing.csv'
+
+    # Check whether the specified path exists or not
+    isExist = os.path.exists(training_filepath)
+    if(isExist):
+        print('Reading from ' + training_filepath)
+    else:
+        print('Training file not found in the app path.')
+        exit()
+    df = read_data(filepath)
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(1000), 2)
+    # training, test = np.array_split(df.head(1000), 2)
     labels = training['human_tag']
 
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
@@ -635,22 +448,14 @@ def main(training_filepath):
     model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
     trainClassifiers(features, labels)
-
-    # features  = tokenizeText2(training, 'clean_text',ppb.DistilBertModel)
-
-
+    # Check whether the specified path exists or not
+    isExist = os.path.exists(testing_filepath)
+    if(isExist):
+        print('Reading from ' + testing_filepath)
+    else:
+        print('Testing file not found in the app path.')
+        exit()
+    df = read_data(filepath)
 
 if __name__ == "__main__":
-    # Specify path
-    training_filepath = 'data/training.csv'
-
-    # Check whether the specified
-    # path exists or not
-    isExist = os.path.exists(training_filepath)
-    if(isExist):
-        print('Reading from ' + training_filepath)
-    else:
-        print('Training file not found in the app path.')
-        exit()
-    main(training_filepath)
-
+    main()

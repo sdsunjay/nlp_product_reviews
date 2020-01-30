@@ -27,9 +27,8 @@ from sklearn.metrics import average_precision_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 
-MAX_LEN = 1024
 MAX_TOKENS = 512
-MAX_WORDS = 475
+MAX_WORDS = 480
 
 def save_model(model, filename):
     print('Saving model to ' + filename)
@@ -40,88 +39,62 @@ def load_model(filename):
     # load the model from disk
     return pickle.load(open(filename, 'rb'))
 
+def trainClassifier(model_name, model, X_train, X_test, y_train, y_test):
+    history = model.fit(X_train, y_train)
+
+    print('Model: ' + model_name)
+    y_test_pred = model.predict(X_test)
+    print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = history.score(X_test, y_test)
+    print('Score: ' + str(score))
+    # save_model(model, model_name)
+
+
 def trainClassifiers(features, labels):
     print('Starting training')
     # create training and testing vars
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
 
-    lr_clf = LogisticRegression()
-    model = lr_clf.fit(X_train, y_train)
+    # Create a simple Logistic Regression classifier
+    model_name = 'Logistic Regression'
+    model = LogisticRegression()
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    print('Logistic Regiression')
-    y_test_pred = lr_clf.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
-    # save_model(lr_clf, 'LR_classifier')
-
-    print('Linear SVC')
     # Create a simple Linear SVC classifier
-    svm_classifier = svm.LinearSVC(random_state=42)
-    svm_classifier.fit(X_train, y_train)
-    y_test_pred = svm_classifier.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
+    model_name = 'Linear SVC'
+    model = svm.LinearSVC(random_state=42)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Logistic Regression with Sklearn and random state
-    print('Logistic regression model 2 (random state 42)')
-    LG_classifier = SklearnClassifier(LogisticRegression(random_state=42))
-    LG_classifier.fit(X_train, y_train)
-    y_test_pred = LG_classifier.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
+    model_name = 'Logistic regression model 2 (random state 42)'
+    model = SklearnClassifier(LogisticRegression(random_state=42))
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Naive Bayes Classifier
-    print('Naive Bayes Classifier')
-    NB_classifier = NaiveBayesClassifier()
-    NB_classifier.fit(X_train, y_train)
-    y_test_pred = NB_classifier.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
+    model = NaiveBayesClassifier()
+    model_name = 'Naive Bayes Classifier'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    print("Sparse Support Vector Classifier")
-    SVC_classifier = SklearnClassifier(SVC(),sparse=False).train(train_features)
-    SVC_classifier.fit(X_train, y_train)
-    y_test_pred = SVC_classifier.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
-    # save_model(NB_classifier, 'SVC_classifier')
+    # Sparse Support Vector Classifier
+    model = SklearnClassifier(SVC(),sparse=False).train(train_features)
+    model_name = 'Sparse Support Vector Classifier'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    print("Linear Support Vector Classifier 1")
-    LinearSVC_classifier1 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    LinearSVC_classifier1.fit(X_train, y_train)
-    y_test_pred = LinearSVC_classifier1.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
+    # Linear Support Vector Classifier
+    model_name = 'Linear Support Vector Classifier 1'
+    model = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    print("Linear Support Vector Classifier 2")
-    LinearSVC_classifier2 = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
-    LinearSVC_classifier2 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    LinearSVC_classifier2.fit(X_train, y_train)
-    y_test_pred = LinearSVC_classifier2.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
+    # l1 Support Vector Classifier
+    model_name = 'Linear Support Vector Classifier 2 (l1)'
+    model = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    print("Linear Support Vector Classifier 3")
-    LinearSVC_classifier3 = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
-    LinearSVC_classifier3 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    LinearSVC_classifier3.fit(X_train, y_train)
-    y_test_pred = LinearSVC_classifier3.predict(X_test)
-	print(classification_report(y_test, np.around(y_test_pred)))
-    print(roc_auc_score(y_test, y_test_pred))
-    score = model.score(X_test, y_test)
-    print('Score: ' + str(score))
+    # l2 Support Vector Classifier
+    model_name = 'Linear Support Vector Classifier 3 (l2)'
+    model = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
 def createTensor1(padded, model):
     print('create_tensor1')
@@ -132,16 +105,6 @@ def createTensor1(padded, model):
         features = last_hidden_states[0][:, 0, :].numpy()
         print('Finished creating features')
         return features
-
-def createTensor2(input_ids, model):
-    print('create_tensor2')
-    with torch.no_grad():
-        last_hidden_states = model(input_ids)
-        # Slice the output for the first position for all the sequences, take all hidden unit outputs
-        features = last_hidden_states[0][:, 0, :].numpy()
-        print('Finished creating features')
-        return features
-
 def padding(tokenized):
     max_len = 0
     for i in tokenized.values:
@@ -187,8 +150,6 @@ def tokenizeText1(df, text_column_name, model_class):
         model.resize_token_embeddings(len(tokenizer))
         tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
         # tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
-        # input_ids = torch.tensor(tokenizer.convert_tokens_to_ids(tokens))
-        # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
 
         ### Now let's save our model and tokenizer to a directory
         # model.save_pretrained('./my_model/')
@@ -216,15 +177,15 @@ def tokenizeText2(df, text_column_name, model_class):
         model = model_class.from_pretrained(pretrained_weights)
         tokenizer = tokenizer_class.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         model.resize_token_embeddings(len(tokenizer))
-        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
-        input_ids = torch.tensor(tokenizer.convert_tokens_to_ids(tokens))
+        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)))
+        tokenized = tokenizer.convert_tokens_to_ids(tokens)
         # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
 
         ### Now let's save our model and tokenizer to a directory
         # model.save_pretrained('./my_model/')
         # tokenizer.save_pretrained('./my_model/')
-        # padded = padding(tokenized)
-        return createTensor2(input_ids, model):
+        padded = padding(tokenized)
+        return createTensor1(padded, model)
     except Exception:
         print("Exception in Tokenize code:")
         print("-"*60)
@@ -469,6 +430,30 @@ def removeWordsNotIn(text, stop_words):
         exit()
     return final_string
 
+def shortenText(text, all_words):
+    count = 0
+    final_string = ""
+    try:
+        words = text.split()
+        for word in words:
+            word = word.lower()
+            if len(word) > 7:
+                if word in all_words:
+                    count += 1
+                    if(count == MAX_WORDS-1):
+                        # if we hit max number of token, stop parsing string
+                        return final_string[:-1]
+                    else:
+                        final_string += word
+                        final_string += ' '
+        final_string = final_string[:-1]
+    except Exception as e:
+        print("Error")
+        # exit()
+        print("type error: " + str(e))
+    return final_string
+
+
 def addWordsIn(text, all_words):
     """ Also does truncation """
     # print('Adding only the top words')
@@ -482,8 +467,9 @@ def addWordsIn(text, all_words):
             if word in all_words:
                 count += 1
                 if(count == MAX_WORDS-1):
+                    return shortenText(text, all_words)
                     # if we hit max number of token, stop parsing string
-                    return final_string[:-1]
+                    # return final_string[:-1]
                 else:
                     final_string += word
                     final_string += ' '
@@ -582,15 +568,15 @@ def main(training_filepath):
     # df.clean_text.to_csv('clean_text.csv')
     # split into training, validation, and test sets
     training, test = np.array_split(df.head(4000), 2)
-    # tokenizer = getTokenizer(training, 'clean_text')
-
-    features  = tokenizeText1(training, 'clean_text',ppb.DistilBertModel)
     labels = training['human_tag']
+
+    features  = tokenizeText1(training, 'clean_text', ppb.DistilBertModel)
+    trainClassifiers(features, labels)
+    features  = tokenizeText1(training, 'clean_text', ppb.RobertaModel)
     trainClassifiers(features, labels)
 
     # features  = tokenizeText2(training, 'clean_text',ppb.DistilBertModel)
-    # labels = training['human_tag']
-    # trainClassifiers(features, labels)
+
 
 
 if __name__ == "__main__":

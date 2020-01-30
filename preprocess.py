@@ -404,7 +404,7 @@ def preprocess_file(filepath, output_path, flag):
 
     df = read_data(filepath)
     if(flag):
-        header = ["ID", "clean_text", "star_rating"]
+        header = ["ID", "clean_text", "star_rating", 'human_tag']
     else:
         header = ["ID", "clean_text"]
     print('Output: ' + output_path)

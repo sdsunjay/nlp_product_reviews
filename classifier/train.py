@@ -108,25 +108,25 @@ def trainClassifiers(features, labels):
     # model = GaussianNB()
     # model_name = 'Gaussian Classifier'
     # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
-    
+
     # TODO - Fix this and make it work
     # MultinomialNB Classifier
     # model = MultinomialNB()
     # model_name = 'Multinomial Classifier'
     # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    model = MLPClassifier(hidden_layer_sizes=(30,30,30))   
+    model = MLPClassifier(hidden_layer_sizes=(30,30,30))
     model_name = 'Multi-Layer Perceptron Classifier (3 layers)'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
-    
-    model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))   
+
+    model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))
     model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
-    
-    model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))   
+
+    model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))
     model_name = 'Multi-Layer Perceptron Classifier (10 layers)'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
- 
+
     # Sparse Support Vector Classifier
     model = SklearnClassifier(SVC(),sparse=False).train(train_features)
     model_name = 'Sparse Support Vector Classifier'
@@ -282,165 +282,6 @@ def tokenizeText2(df, text_column_name, model_class):
     print('Finished tokenizing text')
     return (tokenized,model,tokenizer)
 
-def truncate(text):
-    """Truncate the text."""
-    # TODO fix this to use a variable instead of 511
-    text = (text[:511]) if len(text) > MAX_TOKENS else text
-    return text
-
-def hasNumbers(inputString):
-    return any(char.isdigit() for char in inputString)
-
-def contractions(text):
-    contractions = {
-        "ain't": "are not ",
-        "aren't": "are not",
-        "can't": "cannot",
-        "can't've": "cannot have",
-        "'cause": "because",
-        "could've": "could have",
-        "couldn't": "could not",
-        "couldn't've": "could not have",
-        "didn't": "did not",
-        "doesn't": "does not",
-        "don't": "do not",
-        "hadn't": "had not",
-        "hadn't've": "had not have",
-        "hasn't": "has not",
-        "haven't": "have not",
-        "he'd": "he would",
-        "he'd've": "he would have",
-        "he'll": "he will",
-        "he'll've": "he will have",
-        "he's": "he is",
-        "how'd": "how did",
-        "how'd'y": "how do you",
-        "how'll": "how will",
-        "how's": "how is",
-        "i'd": "i had",
-        "i'd've": "i would have",
-        "i'll": "i will",
-        "i'll've": "i will have",
-        "i'm": "i am",
-        "i've": "i have",
-        "isn't": "is not",
-        "it'd": "it had",
-        "it'd've": "it would have",
-        "it'll": "it will",
-        "it'll've": "it will have",
-        "it's": "it is",
-        "let's": "let us",
-        "ma'am": "madam",
-        "mayn't": "may not",
-        "might've": "might have",
-        "mightn't": "might not",
-        "mightn't've": "might not have",
-        "must've": "must have",
-        "mustn't": "must not",
-        "mustn't've": "must not have",
-        "needn't": "need not",
-        "needn't've": "need not have",
-        "o'clock": "of the clock",
-        "oughtn't": "ought not",
-        "oughtn't've": "ought not have",
-        "shan't": "shall not",
-        "sha'n't": "shall not",
-        "shan't've": "shall not have",
-        "she'd": "she would",
-        "she'd've": "she would have",
-        "she'll": "she will",
-        "she'll've": "she will have",
-        "she's": "she is",
-        "should've": "should have",
-        "shouldn't": "should not",
-        "shouldn't've": "should not have",
-        "so've": "so have",
-        "so's": "so as ",
-        "that'd": "that would",
-        "that'd've": "that would have",
-        "that's": "that is",
-        "there'd": "there would",
-        "there'd've": "there would have",
-        "there's": "there is",
-        "they'd": "they would",
-        "they'd've": "they would have",
-        "they'll": "they will",
-        "they'll've": "they will have",
-        "they're": "they are",
-        "they've": "they have",
-        "to've": "to have",
-        "wasn't": "was not",
-        "we'd": "we would",
-        "we'd've": "we would have",
-        "we'll": "we will",
-        "we'll've": "we will have",
-        "we're": "we are",
-        "we've": "we have",
-        "weren't": "were not",
-        "what'll": "what will",
-        "what'll've": "what will have",
-        "what're": "what are",
-        "what's": "what is",
-        "what've": "what have",
-        "when's": "when is",
-        "when've": "when have",
-        "where'd": "where did",
-        "where's": "where is",
-        "where've": "where have",
-        "who'll": "who will",
-        "who'll've": "who will have",
-        "who's": "who is",
-        "who've": "who have",
-        "why's": "why is",
-        "why've": "why have",
-        "will've": "will have",
-        "won't": "will not",
-        "won't've": "will not have",
-        "would've": "would have",
-        "wouldn't": "would not",
-        "wouldn't've": "would not have",
-        "y'all": "you all",
-        "y'all'd": "you all would",
-        "y'all'd've": "you all would have",
-        "y'all're": "you all are",
-        "y'all've": "you all have",
-        "you'd": "you had",
-        "you'd've": "you would have",
-        "you'll": "you will",
-        "you'll've": "you will have",
-        "you're": "you are",
-        "you've": "you have"}
-
-    words = text.split()
-    final_string = ""
-    try:
-        for word in words:
-            word = word.lower()
-            if hasNumbers(word) == False:
-                if word in contractions:
-                    # print('Word: ' + word)
-                    # print('Replacement: ' + contractions[word])
-                    final_string += contractions[word]
-                    final_string += ' '
-                    flag = True
-                else:
-                    final_string += word
-                    final_string += ' '
-                    flag = False
-        if(flag):
-            final_string = final_string[:-1]
-    except Exception as e:
-        print("type error: " + str(e))
-        exit()
-    return final_string
-
-def removePunctuationFromList(all_words):
-    all_words = [''.join(c for c in s if c not in string.punctuation)
-            for s in all_words]
-    # Remove the empty strings:
-    all_words = [s for s in all_words if s]
-    return all_words
-
 def read_data(filepath):
     """Read the CSV from disk."""
     df = pd.read_csv(filepath, delimiter=',')
@@ -452,7 +293,6 @@ def main():
     """Main function of the program."""
     # Specify path
     training_filepath = 'data/clean_training.csv'
-    testing_filepath = 'data/clean_testing.csv'
 
     # Check whether the specified path exists or not
     isExist = os.path.exists(training_filepath)
@@ -472,14 +312,6 @@ def main():
     model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
     trainClassifiers(features, labels)
-    # Check whether the specified path exists or not
-    isExist = os.path.exists(testing_filepath)
-    if(isExist):
-        print('Reading from ' + testing_filepath)
-    else:
-        print('Testing file not found in the app path.')
-        exit()
-    df = read_data(filepath)
 
 if __name__ == "__main__":
     main()

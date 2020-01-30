@@ -1,12 +1,16 @@
+
 import numpy as np
 import pandas as pd
 import torch
 import transformers as ppb  # pytorch transformers
 from sklearn.linear_model import LogisticRegression
+# Training the model and Testing Accuracy on Validation data
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 
 import os.path
+import sys, traceback
 import random
 import re
 from nltk.corpus import stopwords
@@ -23,7 +27,9 @@ from sklearn.metrics import average_precision_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 
-MAX_LEN = 512
+MAX_LEN = 1024
+MAX_TOKENS = 512
+MAX_WORDS = 475
 
 def save_model(model, filename):
     print('Saving model to ' + filename)
@@ -35,59 +41,90 @@ def load_model(filename):
     return pickle.load(open(filename, 'rb'))
 
 def trainClassifiers(features, labels):
-    print('starting training')
-    # train_features, test_features, train_labels, test_labels = train_test_split(features, labels)
-
+    print('Starting training')
     # create training and testing vars
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
-    # print(X_train.shape, y_train.shape)
-    # print(X_test.shape, y_test.shape)
 
-    # Logistic Regressions
     lr_clf = LogisticRegression()
     model = lr_clf.fit(X_train, y_train)
-    predictions = lr_clf.predict(X_test)
+
+    print('Logistic Regiression')
+    y_test_pred = lr_clf.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
     score = model.score(X_test, y_test)
     print('Score: ' + str(score))
-    print('Finished training logistic regression model 1')
-    print("Logistic Regression Classifier 1 accuracy percent:", (nltk.classify.accuracy(lr_clf, X_test)) * 100)
-    save_model(lr_clf, 'LR_classifier')
-    exit()
+    # save_model(lr_clf, 'LR_classifier')
+
+    print('Linear SVC')
+    # Create a simple Linear SVC classifier
+    svm_classifier = svm.LinearSVC(random_state=42)
+    svm_classifier.fit(X_train, y_train)
+    y_test_pred = svm_classifier.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
 
     # Logistic Regression with Sklearn and random state
+    print('Logistic regression model 2 (random state 42)')
     LG_classifier = SklearnClassifier(LogisticRegression(random_state=42))
-    LG_classifier.train(train_features)
-    print('Finished training logistic regression model 2')
-    save_model(LG_classifier, 'LG_classifier')
-    print("Logistic Regression Classifier 2 accuracy percent:",
-            (nltk.classify.accuracy(LG_classifier, test_features)) * 100)
+    LG_classifier.fit(X_train, y_train)
+    y_test_pred = LG_classifier.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
 
     # Naive Bayes Classifier
-    NB_classifier = nltk.NaiveBayesClassifier.train(train_features)
-    print("Classic Naive Bayes Classifier accuracy percent:",(nltk.classify.accuracy(NB_classifier, test_features)) * 100)
-    save_model(NB_classifier, 'NB_classifier')
+    print('Naive Bayes Classifier')
+    NB_classifier = NaiveBayesClassifier()
+    NB_classifier.fit(X_train, y_train)
+    y_test_pred = NB_classifier.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
 
+    print("Sparse Support Vector Classifier")
     SVC_classifier = SklearnClassifier(SVC(),sparse=False).train(train_features)
-    SVC_classifier.train(train_features)
-    print("C-Support Vector Classifier accuracy percent:",(nltk.classify.accuracy(SVC_classifier, test_features)) * 100)
-    save_model(NB_classifier, 'SVC_classifier')
+    SVC_classifier.fit(X_train, y_train)
+    y_test_pred = SVC_classifier.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
+    # save_model(NB_classifier, 'SVC_classifier')
 
+    print("Linear Support Vector Classifier 1")
     LinearSVC_classifier1 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    LinearSVC_classifier1.train(train_features)
-    print("Linear Support Vector Classifier 1 accuracy percent:",
-            (nltk.classify.accuracy(LinearSVC_classifier1, test_features)) * 100)
-    LinearSVC_classifier2 = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
-    LinearSVC_classifier2.train(train_features)
-    print("Linear Support Vector Classifier 2 accuracy percent:",
-            (nltk.classify.accuracy(LinearSVC_classifier2, test_features)) * 100)
-    LinearSVC_classifier3 = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
-    LinearSVC_classifier3.train(train_features)
-    print("Linear Support Vector Classifier 3 accuracy percent:",
-            (nltk.classify.accuracy(LinearSVC_classifier3, test_features)) * 100)
+    LinearSVC_classifier1.fit(X_train, y_train)
+    y_test_pred = LinearSVC_classifier1.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
 
-def createTensor(padded, model):
-    print('create_tensor')
-    # TODO: fix this, figure out why it is failing
+    print("Linear Support Vector Classifier 2")
+    LinearSVC_classifier2 = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
+    LinearSVC_classifier2 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
+    LinearSVC_classifier2.fit(X_train, y_train)
+    y_test_pred = LinearSVC_classifier2.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
+
+    print("Linear Support Vector Classifier 3")
+    LinearSVC_classifier3 = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
+    LinearSVC_classifier3 = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
+    LinearSVC_classifier3.fit(X_train, y_train)
+    y_test_pred = LinearSVC_classifier3.predict(X_test)
+	print(classification_report(y_test, np.around(y_test_pred)))
+    print(roc_auc_score(y_test, y_test_pred))
+    score = model.score(X_test, y_test)
+    print('Score: ' + str(score))
+
+def createTensor1(padded, model):
+    print('create_tensor1')
     input_ids = torch.tensor(np.array(padded))
     with torch.no_grad():
         last_hidden_states = model(input_ids)
@@ -96,6 +133,14 @@ def createTensor(padded, model):
         print('Finished creating features')
         return features
 
+def createTensor2(input_ids, model):
+    print('create_tensor2')
+    with torch.no_grad():
+        last_hidden_states = model(input_ids)
+        # Slice the output for the first position for all the sequences, take all hidden unit outputs
+        features = last_hidden_states[0][:, 0, :].numpy()
+        print('Finished creating features')
+        return features
 
 def padding(tokenized):
     max_len = 0
@@ -124,41 +169,79 @@ def something(df, text_column_name):
 	model.save_pretrained('./my_saved_model_directory/')
 	tokenizer.save_pretrained('./my_saved_model_directory/')
 
-def tokenize(df, text_column_name):
-    print('Starting to tokenize ' + text_column_name)
-    model, tokenizer, pretrained_weights = (ppb.DistilBertModel,ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-
-    ## Want BERT instead of distilBERT? Uncomment the following line:
-    # model, tokenizer, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer,'bert-large-uncased')
-
+def tokenizeText1(df, text_column_name, model_class):
     # model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     # Load pretrained model/tokenizer
     try:
-        tokenizer = tokenizer.from_pretrained(pretrained_weights)
-        # tokenized = tokenizer.tokenize(df[text_column_name])
-        tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
-        # model.resize_token_embeddings(len(tokenizer))
-        model = model.from_pretrained(pretrained_weights)
-	    ### Now let's save our model and tokenizer to a directory
-        model.save_pretrained('./my_model/')
-        tokenizer.save_pretrained('./my_model/')
-    except:
-        print('Tokenizer failed')
+        print('Starting to tokenize ' + text_column_name)
+        tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        # want RoBERTa instead of distilBERT, Uncomment the following line:
+        # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        ## Want BERT instead of distilBERT? Uncomment the following line:
+        # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer,'bert-large-uncased')
+        model = model_class.from_pretrained(pretrained_weights)
+        tokenizer = tokenizer_class.from_pretrained('distilbert-base-uncased', do_lower_case=True)
+        model.resize_token_embeddings(len(tokenizer))
+        tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
+        # tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
+        # input_ids = torch.tensor(tokenizer.convert_tokens_to_ids(tokens))
+        # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
+
+        ### Now let's save our model and tokenizer to a directory
+        # model.save_pretrained('./my_model/')
+        # tokenizer.save_pretrained('./my_model/')
+        padded = padding(tokenized)
+        return createTensor1(padded, model)
+    except Exception:
+        print("Exception in Tokenize code:")
+        print("-"*60)
+        traceback.print_exc(file=sys.stdout)
+        print("-"*60)
         exit()
         # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         # tokenized = tokenizer.tokenize(df[text_column_name])
         # model.resize_token_embeddings(len(tokenizer))
 
     print('Finished tokenizing text')
-    return (tokenized,model)
+    return (tokenized,model,tokenizer)
+
+def tokenizeText2(df, text_column_name, model_class):
+    # Load pretrained model/tokenizer
+    try:
+        print('Starting to tokenize 2' + text_column_name)
+        tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        model = model_class.from_pretrained(pretrained_weights)
+        tokenizer = tokenizer_class.from_pretrained('distilbert-base-uncased', do_lower_case=True)
+        model.resize_token_embeddings(len(tokenizer))
+        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
+        input_ids = torch.tensor(tokenizer.convert_tokens_to_ids(tokens))
+        # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
+
+        ### Now let's save our model and tokenizer to a directory
+        # model.save_pretrained('./my_model/')
+        # tokenizer.save_pretrained('./my_model/')
+        # padded = padding(tokenized)
+        return createTensor2(input_ids, model):
+    except Exception:
+        print("Exception in Tokenize code:")
+        print("-"*60)
+        traceback.print_exc(file=sys.stdout)
+        print("-"*60)
+        exit()
+        # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        # tokenized = tokenizer.tokenize(df[text_column_name])
+        # model.resize_token_embeddings(len(tokenizer))
+
+    print('Finished tokenizing text')
+    return (tokenized,model,tokenizer)
 
 def truncate(text):
     """Truncate the text."""
     # TODO fix this to use a variable instead of 511
-    text = (text[:511]) if len(text) > MAX_LEN else text
+    text = (text[:511]) if len(text) > MAX_TOKENS else text
     return text
 
 def hasNumbers(inputString):
@@ -341,11 +424,8 @@ def getAllWords(lines, stop_words):
     all_words = {}
     try:
         for line in lines:
-            # print('LINE: ' + line)
             words = line.split()
             for word in words:
-                word = word.lower()
-                # print('WORD: ' + word)
                 if word not in stop_words:
                     all_words[word] = True
         temp = all_words.keys()
@@ -389,7 +469,9 @@ def removeWordsNotIn(text, stop_words):
         exit()
     return final_string
 
-def addWordsIn(text, all_words, length_flag, max_word_length):
+def addWordsIn(text, all_words):
+    """ Also does truncation """
+    # print('Adding only the top words')
     count = 0
     final_string = ""
     try:
@@ -399,14 +481,9 @@ def addWordsIn(text, all_words, length_flag, max_word_length):
 
             if word in all_words:
                 count += 1
-                if(count == MAX_LEN-1):
+                if(count == MAX_WORDS-1):
                     # if we hit max number of token, stop parsing string
                     return final_string[:-1]
-                    # return addWordsIn(text, all_words, True, max_word_length+(max_word_length/2))
-                if length_flag:
-                    if len(word) >= max_word_length:
-                        final_string += word
-                        final_string += ' '
                 else:
                     final_string += word
                     final_string += ' '
@@ -488,31 +565,32 @@ def read_data(filepath):
     # print(clean_text[:10])
     print('Getting all words')
     all_words = getAllWords(clean_text, stop_words)
-    print('adding words in all_words')
-    df['clean_text'] = [addWordsIn(line, all_words, False, 8) for line in df['clean_text']]
+    # print('adding words in all_words')
+    df['clean_text'] = [addWordsIn(line, all_words) for line in df['clean_text']]
 
-    # df["clean_text"] = df['clean_text'].apply(truncate)
-    # df.text = df.text.apply(lambda x: x.lower())
     # df.text = df.text.apply(lambda x: x.translate(None, string.punctuation))
     # df.clean_text = df.clean_text.apply(lambda x: x.translate(string.digits))
-    # all_words = df.clean_text.apply(get_counts)
     # df["clean_text"] = df['text'].str.replace('[^\w\s]','')
     print('Finished reading and cleaning data')
-    print('Number of rows: ' + str(len(df.index)))
+    print('Number of rows in dataframe: ' + str(len(df.index)))
     # print(df.head(30))
     return df
 
 def main(training_filepath):
     """Main function of the program."""
     df = read_data(training_filepath)
-    df.clean_text.to_csv('clean_text.csv')
+    # df.clean_text.to_csv('clean_text.csv')
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(00), 2)
-    tokens,model = tokenize(training, 'clean_text')
-    padded = padding(tokens)
-    features = createTensor(padded, model)
+    training, test = np.array_split(df.head(4000), 2)
+    # tokenizer = getTokenizer(training, 'clean_text')
+
+    features  = tokenizeText1(training, 'clean_text',ppb.DistilBertModel)
     labels = training['human_tag']
     trainClassifiers(features, labels)
+
+    # features  = tokenizeText2(training, 'clean_text',ppb.DistilBertModel)
+    # labels = training['human_tag']
+    # trainClassifiers(features, labels)
 
 
 if __name__ == "__main__":

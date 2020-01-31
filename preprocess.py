@@ -408,7 +408,7 @@ def preprocess_file(filepath, output_path, flag):
     else:
         header = ["ID", "clean_text"]
     print('Output: ' + output_path)
-    df.to_csv(output_path, columns = header)
+    df.to_csv(output_path, columns = header, index=False)
 
 def main():
     """Main function of the program."""

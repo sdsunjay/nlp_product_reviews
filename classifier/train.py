@@ -51,7 +51,7 @@ def load_model(filename):
     # load the model from disk
     return pickle.load(open(filename, 'rb'))
 
-def trainClassifier(model_name, model, X_train, X_test, y_train, y_test):
+def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1):
     history = model.fit(X_train, y_train)
 
     print('Model: ' + model_name)
@@ -65,13 +65,19 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test):
     # evaluate predictions
     accuracy = accuracy_score(y_test, predictions)
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
+    y_final_pred = model.predict(testing_features)
+    df1["human_tag"] = y_final_pred
+    header = ["ID", "human_tag"]
+    output_path = 'result/' + model_name + '.csv'
+    print('Output: ' + output_path)
+    df1.to_csv(output_path, columns = header)
     # save_model(model, model_name)
 
 
-def trainClassifiers(features, labels):
+def trainClassifiers(features, labels, testing_features, df1):
     print('Starting training')
     # create training and testing vars
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.1)
 
     # Create a simple Logistic Regression classifier
     # model_name = 'Logistic Regression (solver=lbfgs)'
@@ -89,9 +95,9 @@ def trainClassifiers(features, labels):
     # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # XGBoost
-    # model = XGBClassifier()
-    # model_name = 'XGBoost Classifier'
-    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model = XGBClassifier()
+    model_name = 'XGB'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # TODO - Fix this and make it work
     # Naive Bayes Classifier
@@ -110,62 +116,70 @@ def trainClassifiers(features, labels):
     # model_name = 'Multinomial Classifier'
     # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
+    # Multi-Layer Perceptron Classifier (3 layers)
     model = MLPClassifier(hidden_layer_sizes=(30,30,30))
-    model_name = 'Multi-Layer Perceptron Classifier (3 layers)'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = 'MLP3'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))
-    model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
+    model_name = 'MLP5'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))
-    model_name = 'Multi-Layer Perceptron Classifier (10 layers)'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = 'MLP10'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    
+    model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100))
+    model_name = 'MLP100'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Sparse Support Vector Classifier
-    model = SklearnClassifier(SVC(),sparse=False).train(train_features)
-    model_name = 'Sparse Support Vector Classifier'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model = SklearnClassifier(SVC(),sparse=False)
+    model_name = 'Sparse_SVC'
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Linear Support Vector Classifier
-    model_name = 'Linear Support Vector Classifier 1'
+    model_name = 'Linear_SVC' 
     model = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # l1 Support Vector Classifier
-    model_name = 'Linear Support Vector Classifier 2 (l1)'
+    model_name = 'Linear_SVC_l1' 
     model = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # l2 Support Vector Classifier
-    model_name = 'Linear Support Vector Classifier 3 (l2)'
+    model_name = 'Linear_SVC_l2' 
     model = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Train SGD with hinge penalty
-    model_name = "Stochastic Gradient Descent Classifier (hinge loss)"
+    # model_name = "Stochastic Gradient Descent Classifier (hinge loss)"
+    model_name = 'SGD_hinge_loss' 
     model = SklearnClassifier(SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5000, tol=None))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Train SGD with Elastic Net penalty
     model = SklearnClassifier(SGDClassifier(alpha=1e-3, random_state=42, penalty="elasticnet", max_iter=5000, tol=None))
-    model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    # model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
+    model_name = 'SGD_elasticnet' 
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Ridge Classifier
     model = SklearnClassifier(RidgeClassifier(alpha=0.5, tol=1e-2, solver="sag"))
-    model_name = "Ridge Classifier"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = "Ridge"
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Perceptron Classifier
     model = SklearnClassifier(Perceptron(max_iter=5000))
-    model_name = "Perceptron Classifier"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = "Perceptron"
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
     # Passive-Aggressive Classifier
     model = SklearnClassifier(PassiveAggressiveClassifier(max_iter=1000))
-    model_name = "Passive-Aggressive Classifier"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = "Passive-Aggressive"
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
 def createTensor1(padded, model):
     print('create_tensor1')
@@ -176,11 +190,14 @@ def createTensor1(padded, model):
         features = last_hidden_states[0][:, 0, :].numpy()
         print('Finished creating features')
         return features
+
 def padding(tokenized):
+    print(len(tokenized))
     max_len = 0
     for i in tokenized.values:
         if len(i) > max_len:
             max_len = len(i)
+       
 
     padded = np.array([i + [0] * (max_len - len(i)) for i in tokenized.values])
     # np.array(padded).shape
@@ -199,7 +216,7 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_
     # Load pretrained model/tokenizer
     try:
         print('Starting to tokenize ' + text_column_name)
-        print(df.head(10))
+        # print(df.head(10))
         # (tokenizer_class, pretrained_weights) = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
         # want RoBERTa instead of distilBERT, Uncomment the following line:
         # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
@@ -209,11 +226,10 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_
         tokenizer = tokenizer_class.from_pretrained(pretrained_weights, do_lower_case=True)
         model.resize_token_embeddings(len(tokenizer))
         tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
-        # tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
 
         ### Now let's save our model and tokenizer to a directory
-        # model.save_pretrained('./my_model/')
-        # tokenizer.save_pretrained('./my_model/')
+        model.save_pretrained('./my_model/')
+        tokenizer.save_pretrained('./my_model/')
         padded = padding(tokenized)
         return createTensor1(padded, model)
     except Exception:
@@ -229,22 +245,24 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_
     print('Finished tokenizing text')
     return (tokenized,model,tokenizer)
 
-def tokenizeText2(df, text_column_name, model_class):
+def tokenizeText2(df, text_column_name, model_class, tokenizer_class, pretrained_weights):
     # Load pretrained model/tokenizer
     try:
         print('Starting to tokenize 2' + text_column_name)
-        tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        # tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
         model = model_class.from_pretrained(pretrained_weights)
         tokenizer = tokenizer_class.from_pretrained('distilbert-base-uncased', do_lower_case=True)
         model.resize_token_embeddings(len(tokenizer))
-        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)))
+        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
+        # print(tokens)
         tokenized = tokenizer.convert_tokens_to_ids(tokens)
+
         # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
 
         ### Now let's save our model and tokenizer to a directory
         # model.save_pretrained('./my_model/')
         # tokenizer.save_pretrained('./my_model/')
-        padded = padding(tokenized)
+        padded = padding(tokenized[:511])
         return createTensor1(padded, model)
     except Exception:
         print("Exception in Tokenize code:")
@@ -277,17 +295,37 @@ def main():
         print('Training file not found in the app path.')
         exit()
     df = read_data(training_filepath)
-    import pdb; pdb.set_trace()
-    df = df.dropna()
+    # import pdb; pdb.set_trace()
     # df = df.sample(frac=0.5).reset_index(drop=True)
+    df = df.dropna()
     
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(2000), 2)
+    training, test = np.array_split(df.head(16000), 2)
     labels = training['human_tag']   
     # print(df.clean_text.to_string(index=False))
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+   
+
+
+    testing_filepath = 'data/clean_testing.csv'
+    # Check whether the specified path exists or not
+    isExist = os.path.exists(testing_filepath)
+    if(isExist):
+        print('Reading from ' + testing_filepath)
+    else:
+        print('Testing file not found in the app path.')
+        exit()
+    df1 = read_data(testing_filepath)
+    df1 = df1.dropna()
+    testing_features  = tokenizeText1(df1, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+
+
+    trainClassifiers(features, labels, testing_features, df1)
+    
+    
     # features = tokenizeText2(df, 'clean_text', model_class)
+    # features  = tokenizeText2(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
     # trainClassifiers(features, labels)
     # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     # features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)

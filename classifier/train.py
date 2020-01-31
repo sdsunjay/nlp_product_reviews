@@ -39,9 +39,6 @@ from sklearn.metrics import average_precision_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 
-MAX_TOKENS = 512
-MAX_WORDS = 475
-
 def save_model(model, filename):
     print('Saving model to ' + filename)
     # filename = 'finalized_model.sav'
@@ -68,7 +65,7 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing
     y_final_pred = model.predict(testing_features)
     df1["human_tag"] = y_final_pred
     header = ["ID", "human_tag"]
-    output_path = 'result/' + model_name + '.csv'
+    output_path = 'result/' + model_name
     print('Output: ' + output_path)
     df1.to_csv(output_path, columns = header)
     # save_model(model, model_name)
@@ -181,7 +178,7 @@ def trainClassifiers(features, labels, testing_features, df1):
     model_name = "Passive-Aggressive"
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
 
-def createTensor1(padded, model):
+def createTensor(padded, model):
     print('create_tensor1')
     input_ids = torch.tensor(np.array(padded))
     with torch.no_grad():
@@ -204,14 +201,7 @@ def padding(tokenized):
     print('Finished padding text')
     return padded
 
-### Now let's save our model and tokenizer to a directory
-# model.save_pretrained('./my_saved_model_directory/')
-#tokenizer.save_pretrained('./my_saved_model_directory/')
-
 def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_weights):
-    # model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
-    # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     # Load pretrained model/tokenizer
     try:
@@ -228,10 +218,10 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_
         tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
 
         ### Now let's save our model and tokenizer to a directory
-        model.save_pretrained('./my_model/')
-        tokenizer.save_pretrained('./my_model/')
+        # model.save_pretrained('./my_model/')
+        # tokenizer.save_pretrained('./my_model/')
         padded = padding(tokenized)
-        return createTensor1(padded, model)
+        return createTensor(padded, model)
     except Exception:
         print("Exception in Tokenize code:")
         print("-"*60)
@@ -263,7 +253,7 @@ def tokenizeText2(df, text_column_name, model_class, tokenizer_class, pretrained
         # model.save_pretrained('./my_model/')
         # tokenizer.save_pretrained('./my_model/')
         padded = padding(tokenized[:511])
-        return createTensor1(padded, model)
+        return createTensor(padded, model)
     except Exception:
         print("Exception in Tokenize code:")
         print("-"*60)
@@ -286,7 +276,7 @@ def read_data(filepath):
 def main():
     """Main function of the program."""
     # Specify path
-    training_filepath = 'data/clean_training.csv'
+    training_filepath = 'data/clean_training1.csv'
     # Check whether the specified path exists or not
     isExist = os.path.exists(training_filepath)
     if(isExist):
@@ -300,15 +290,15 @@ def main():
     df = df.dropna()
     
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(16000), 2)
+    training, test = np.array_split(df.head(10000), 2)
     labels = training['human_tag']   
-    # print(df.clean_text.to_string(index=False))
+   
+    # When we have more time
+    # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased') 
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
-   
 
-
-    testing_filepath = 'data/clean_testing.csv'
+    testing_filepath = 'data/clean_testing1.csv'
     # Check whether the specified path exists or not
     isExist = os.path.exists(testing_filepath)
     if(isExist):

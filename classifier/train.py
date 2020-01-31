@@ -23,17 +23,12 @@ import string
 from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.svm import SVC, LinearSVC, NuSVC
-from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
 from sklearn.svm import LinearSVC
-from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.linear_model import Perceptron
-from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.linear_model import RidgeClassifier, SGDClassifier, Perceptron, PassiveAggressiveClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import NearestCentroid
 
 from pytorch_pretrained_bert import BertTokenizer
 
@@ -76,7 +71,7 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test):
 def trainClassifiers(features, labels):
     print('Starting training')
     # create training and testing vars
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.25)
 
     # Create a simple Logistic Regression classifier
     # model_name = 'Logistic Regression (solver=lbfgs)'
@@ -157,12 +152,6 @@ def trainClassifiers(features, labels):
     model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-    # Deprecated
-    # Train NearestCentroid (aka Rocchio classifier) without threshold
-    # model = SklearnClassifier(NearestCentroid())
-    # model_name = "Nearest Centroid Classifier without threshold"
-    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
-
     # Ridge Classifier
     model = SklearnClassifier(RidgeClassifier(alpha=0.5, tol=1e-2, solver="sag"))
     model_name = "Ridge Classifier"
@@ -198,24 +187,11 @@ def padding(tokenized):
     print('Finished padding text')
     return padded
 
-def something(df, text_column_name):
-	### Let's load a model and tokenizer
-	model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
-	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+### Now let's save our model and tokenizer to a directory
+# model.save_pretrained('./my_saved_model_directory/')
+#tokenizer.save_pretrained('./my_saved_model_directory/')
 
-	### Do some stuff to our model and tokenizer
-	# Ex: add new tokens to the vocabulary and embeddings of our model
-	tokenizer.add_tokens(['[SPECIAL_TOKEN_1]', '[SPECIAL_TOKEN_2]'])
-	model.resize_token_embeddings(len(tokenizer))
-	# Train our model
-	train(model)
-
-	### Now let's save our model and tokenizer to a directory
-	model.save_pretrained('./my_saved_model_directory/')
-	tokenizer.save_pretrained('./my_saved_model_directory/')
-
-def tokenizeText1(df, text_column_name, model_class, tokenizer_class,
-        pretrained_weights):
+def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_weights):
     # model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -223,7 +199,8 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class,
     # Load pretrained model/tokenizer
     try:
         print('Starting to tokenize ' + text_column_name)
-        tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        print(df.head(10))
+        # (tokenizer_class, pretrained_weights) = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
         # want RoBERTa instead of distilBERT, Uncomment the following line:
         # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
         ## Want BERT instead of distilBERT? Uncomment the following line:
@@ -284,8 +261,7 @@ def tokenizeText2(df, text_column_name, model_class):
 
 def read_data(filepath):
     """Read the CSV from disk."""
-    df = pd.read_csv(filepath, delimiter=',')
-
+    df = pd.read_csv(filepath, delimiter=',', index_col='ID')
     print('Number of rows in dataframe: ' + str(len(df.index)))
     return df
 
@@ -293,7 +269,6 @@ def main():
     """Main function of the program."""
     # Specify path
     training_filepath = 'data/clean_training.csv'
-
     # Check whether the specified path exists or not
     isExist = os.path.exists(training_filepath)
     if(isExist):
@@ -301,17 +276,22 @@ def main():
     else:
         print('Training file not found in the app path.')
         exit()
-    df = read_data(filepath)
+    df = read_data(training_filepath)
+    import pdb; pdb.set_trace()
+    df = df.dropna()
+    # df = df.sample(frac=0.5).reset_index(drop=True)
+    
     # split into training, validation, and test sets
-    # training, test = np.array_split(df.head(1000), 2)
-    labels = training['human_tag']
-
+    training, test = np.array_split(df.head(2000), 2)
+    labels = training['human_tag']   
+    # print(df.clean_text.to_string(index=False))
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
-    trainClassifiers(features, labels)
-    model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
-    trainClassifiers(features, labels)
+    # features = tokenizeText2(df, 'clean_text', model_class)
+    # trainClassifiers(features, labels)
+    # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+    # features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+    # trainClassifiers(features, labels)
 
 if __name__ == "__main__":
     main()

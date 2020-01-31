@@ -1,51 +1,20 @@
 import numpy as np
 import pandas as pd
-import torch
-import transformers as ppb  # pytorch transformers
-# Training the model and Testing Accuracy on Validation data
-from sklearn.metrics import classification_report, roc_auc_score
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
 
 import os.path
 import sys, traceback
 import random
 import re
-from nltk.corpus import stopwords
-import nltk.classify.util
-import nltk.metrics
 
-from nltk.classify import NaiveBayesClassifier
-from nltk.classify.scikitlearn import SklearnClassifier
 import string
-
-from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
-from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.svm import SVC, LinearSVC, NuSVC
-from sklearn.neighbors.nearest_centroid import NearestCentroid
-from xgboost import XGBClassifier
-
-from sklearn.svm import LinearSVC
-from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.linear_model import Perceptron
-from sklearn.linear_model import PassiveAggressiveClassifier
-from sklearn.naive_bayes import BernoulliNB, MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import NearestCentroid
-
-from pytorch_pretrained_bert import BertTokenizer
 
 import pickle
 import string
 
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import f1_score
+from nltk.probability import FreqDist
 
 MAX_TOKENS = 512
-MAX_WORDS = 475
-
+MAX_WORDS = 400
 
 def truncate(text):
     """Truncate the text."""
@@ -234,7 +203,7 @@ def getAllWords(lines, stop_words):
         # removePunctuationFromList(temp)
 
 
-        top_words = nltk.FreqDist(temp)
+        top_words = FreqDist(temp)
         print("All Words list length : ", len(top_words))
         # print(str(list(all_words1.keys())[:100]))
 
@@ -423,7 +392,7 @@ def main():
     else:
         print('Training file not found in the app path.')
         exit()
-    preprocess_file(training_filepath, 'data/clean_training.csv', True)
+    preprocess_file(training_filepath, 'data/clean_training1.csv', True)
     # Check whether the specified path exists or not
     isExist = os.path.exists(testing_filepath)
     if(isExist):
@@ -431,7 +400,7 @@ def main():
     else:
         print('Testing file not found in the app path.')
         exit()
-    preprocess_file(testing_filepath,'data/clean_testing.csv', False)
+    preprocess_file(testing_filepath,'data/clean_testing1.csv', False)
 
 if __name__ == "__main__":
     main()

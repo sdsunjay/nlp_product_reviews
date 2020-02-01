@@ -33,6 +33,43 @@ def read_data(filepath):
     print('Number of rows in dataframe: ' + str(len(df.index)))
     return df
 
+def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_weights):
+    # model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+    # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+    # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    # Load pretrained model/tokenizer
+    try:
+        print('Starting to tokenize ' + text_column_name)
+        # print(df.head(10))
+        # (tokenizer_class, pretrained_weights) = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        # want RoBERTa instead of distilBERT, Uncomment the following line:
+        # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+        ## Want BERT instead of distilBERT? Uncomment the following line:
+        # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer,'bert-large-uncased')
+        model = model_class.from_pretrained(pretrained_weights)
+        tokenizer = tokenizer_class.from_pretrained(pretrained_weights, do_lower_case=True)
+        model.resize_token_embeddings(len(tokenizer))
+        tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
+
+        ### Now let's save our model and tokenizer to a directory
+        model.save_pretrained('./my_model/')
+        tokenizer.save_pretrained('./my_model/')
+        padded = padding(tokenized)
+        return createTensor1(padded, model)
+    except Exception:
+        print("Exception in Tokenize code:")
+        print("-"*60)
+        traceback.print_exc(file=sys.stdout)
+        print("-"*60)
+        exit()
+        # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        # tokenized = tokenizer.tokenize(df[text_column_name])
+        # model.resize_token_embeddings(len(tokenizer))
+
+    print('Finished tokenizing text')
+    return (tokenized,model,tokenizer)
+
 def main():
 
     testing_filepath = 'data/clean_testing.csv'
@@ -45,8 +82,10 @@ def main():
         exit()
     df = read_data(testing_filepath)
 
-    # filepaths = [ 'XGBoost_Classifier' ]
-    filepaths = [ 'logistic_regression_classifier' ]
+    model = BertForSequenceClassification.from_pretrained('./my_saved_model_directory/')
+tokenizer = BertTokenizer.from_pretrained('./my_saved_model_directory/')
+
+    filepaths = [ 'MLP10','MLP3','MLP5','XGB']
 
     # Check whether the specified
     # path exists or not
@@ -61,10 +100,10 @@ def main():
         model = load_model(filepath)
         print('Model: ' + filepath)
         y_test_pred = model.predict(df["clean_text"])
-        df2["human_tag"] = y_test_pred
+        df["human_tag"] = y_test_pred
         header = ["ID", "human_tag"]
         print('Output: ' + output_path)
-        df2.to_csv(output_path, columns = header)
+        df.to_csv(output_path, columns = header)
 
 if __name__ == "__main__":
     main()

@@ -68,9 +68,10 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing
 def trainClassifiers(features, labels, testing_features):
     print('Starting training')
     # create training and testing vars
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.1)
-    model = XGBClassifier()
-    model_name = 'XGB'
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
+    
+    model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100))
+    model_name = 'MLP100'
     return trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features)
 
 def trainClassifiers1(features, labels, testing_features):
@@ -181,12 +182,16 @@ def trainClassifiers1(features, labels, testing_features):
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
 def createTensor(padded, model):
-    print('create_tensor1')
-    input_ids = torch.tensor(np.array(padded))
+    print('create_tensor')
+    attention_mask = np.where(padded != 0, 1, 0)
+    input_ids = torch.tensor(padded)  
+    attention_mask = torch.tensor(attention_mask)
+
     with torch.no_grad():
-        last_hidden_states = model(input_ids)
+        # last_hidden_states = model(input_ids)
+        last_hidden_states = model(input_ids, attention_mask=attention_mask)    
         # Slice the output for the first position for all the sequences, take all hidden unit outputs
-        features = last_hidden_states[0][:, 0, :].numpy()
+        features = last_hidden_states[0][:,0,:].numpy()        
         print('Finished creating features')
         return features
 
@@ -288,11 +293,11 @@ def main():
         exit()
     df = read_data(training_filepath)
     # import pdb; pdb.set_trace()
-    # df = df.sample(frac=0.5).reset_index(drop=True)
+    df = df.sample(frac=0.5).reset_index(drop=True)
     df = df.dropna()
     
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(10000), 2)
+    training, test = np.array_split(df.head(4000), 2)
     labels = training['human_tag']   
    
     # When we have more time
@@ -310,12 +315,12 @@ def main():
         exit()
     df1 = read_data(testing_filepath)
     df1 = df1.dropna()
-    a = np.array_split(df1,5)
+    a = np.array_split(df1,8)
     i = 0
     values = []
-    for aa in a:
-        
+    for aa in a: 
         output_name = str(i) 
+        print('Run: ' + output_name)
         i += 1
         testing_features  = tokenizeText1(aa, 'clean_text', model_class, tokenizer_class, pretrained_weights)
         final_y_pred = trainClassifiers(features, labels, testing_features)
@@ -323,7 +328,7 @@ def main():
 
     df1["human_tag"] = values
     header = ["ID", "human_tag"]
-    output_path = 'result/XGB' 
+    output_path = 'result/MLP100' 
     print('Output: ' + output_path)
     df1.to_csv(output_path, columns = header)
     

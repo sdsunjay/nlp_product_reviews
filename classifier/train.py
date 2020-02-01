@@ -48,7 +48,7 @@ def load_model(filename):
     # load the model from disk
     return pickle.load(open(filename, 'rb'))
 
-def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1):
+def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features):
     history = model.fit(X_train, y_train)
 
     print('Model: ' + model_name)
@@ -62,16 +62,18 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing
     # evaluate predictions
     accuracy = accuracy_score(y_test, predictions)
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
-    y_final_pred = model.predict(testing_features)
-    df1["human_tag"] = y_final_pred
-    header = ["ID", "human_tag"]
-    output_path = 'result/' + model_name
-    print('Output: ' + output_path)
-    df1.to_csv(output_path, columns = header)
+    return model.predict(testing_features)
     # save_model(model, model_name)
 
+def trainClassifiers(features, labels, testing_features):
+    print('Starting training')
+    # create training and testing vars
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.1)
+    model = XGBClassifier()
+    model_name = 'XGB'
+    return trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features)
 
-def trainClassifiers(features, labels, testing_features, df1):
+def trainClassifiers1(features, labels, testing_features):
     print('Starting training')
     # create training and testing vars
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.1)
@@ -94,7 +96,7 @@ def trainClassifiers(features, labels, testing_features, df1):
     # XGBoost
     model = XGBClassifier()
     model_name = 'XGB'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # TODO - Fix this and make it work
     # Naive Bayes Classifier
@@ -116,67 +118,67 @@ def trainClassifiers(features, labels, testing_features, df1):
     # Multi-Layer Perceptron Classifier (3 layers)
     model = MLPClassifier(hidden_layer_sizes=(30,30,30))
     model_name = 'MLP3'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))
     # model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
     model_name = 'MLP5'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))
     model_name = 'MLP10'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
     
     model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100))
     model_name = 'MLP100'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Sparse Support Vector Classifier
     model = SklearnClassifier(SVC(),sparse=False)
     model_name = 'Sparse_SVC'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Linear Support Vector Classifier
     model_name = 'Linear_SVC' 
     model = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # l1 Support Vector Classifier
     model_name = 'Linear_SVC_l1' 
     model = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # l2 Support Vector Classifier
     model_name = 'Linear_SVC_l2' 
     model = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Train SGD with hinge penalty
     # model_name = "Stochastic Gradient Descent Classifier (hinge loss)"
     model_name = 'SGD_hinge_loss' 
     model = SklearnClassifier(SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5000, tol=None))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Train SGD with Elastic Net penalty
     model = SklearnClassifier(SGDClassifier(alpha=1e-3, random_state=42, penalty="elasticnet", max_iter=5000, tol=None))
     # model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
     model_name = 'SGD_elasticnet' 
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Ridge Classifier
     model = SklearnClassifier(RidgeClassifier(alpha=0.5, tol=1e-2, solver="sag"))
     model_name = "Ridge"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Perceptron Classifier
     model = SklearnClassifier(Perceptron(max_iter=5000))
     model_name = "Perceptron"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Passive-Aggressive Classifier
     model = SklearnClassifier(PassiveAggressiveClassifier(max_iter=1000))
     model_name = "Passive-Aggressive"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
 def createTensor(padded, model):
     print('create_tensor1')
@@ -308,11 +310,22 @@ def main():
         exit()
     df1 = read_data(testing_filepath)
     df1 = df1.dropna()
-    testing_features  = tokenizeText1(df1, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+    a = np.array_split(df1,5)
+    i = 0
+    values = []
+    for aa in a:
+        
+        output_name = str(i) 
+        i += 1
+        testing_features  = tokenizeText1(aa, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+        final_y_pred = trainClassifiers(features, labels, testing_features)
+        values = np.concatenate((values, final_y_pred), axis=0)
 
-
-    trainClassifiers(features, labels, testing_features, df1)
-    
+    df1["human_tag"] = values
+    header = ["ID", "human_tag"]
+    output_path = 'result/XGB' 
+    print('Output: ' + output_path)
+    df1.to_csv(output_path, columns = header)
     
     # features = tokenizeText2(df, 'clean_text', model_class)
     # features  = tokenizeText2(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)

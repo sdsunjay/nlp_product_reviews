@@ -2,6 +2,9 @@
 # ssh-keygen -t rsa -b 4096 -C "sdsunjay73@yahoo.com"
 # cat /home/ubuntu/.ssh/id_rsa.pub
 # git clone git@github.com:sdsunjay/nlp_product_reviews.git
+git config --global user.name "Sunjay Dhama"
+read -p 'Email Address: ' email
+git config --global user.email $email
 echo "mkdir tmp"
 mkdir tmp
 echo "export TMPDIR=/home/ubuntu/tmp"

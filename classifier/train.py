@@ -259,7 +259,7 @@ def main():
     # When we have more time
     # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased') 
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+    features  = tokenizeText1(training, labels, 'clean_text', model_class, tokenizer_class, pretrained_weights)
 
 
     print("End time: " + str(datetime.now() - begin_time_main))

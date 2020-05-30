@@ -34,12 +34,51 @@ def getDataFrame():
     df = df.dropna()
     return df
 
+def batch(padded, labels, model):
+    begin_time_main = datetime.now()
+    print("batch begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
+    # Parameters
+    params = {'batch_size': 200,
+              'shuffle': False,
+              'num_workers': 6}
+    max_epochs = 100
+
+    # Datasets
+    # partition = # IDs
+    # labels = # Labels
+
+    # Generators
+    # training_set = Dataset(padded, labels)
+    training_data = torch.utils.data.DataLoader(padded, **params)
+
+    # validation_set = Dataset(partition['validation'], labels)
+    # validation_generator = torch.utils.data.DataLoader(validation_set, **params)
+
+    final_input_ids = torch.zeros(0.0,0.0)
+    # Loop over epochs
+    # for epoch in range(max_epochs):
+    
+    # Training
+    for local_batch in training_data:
+        input_ids = torch.tensor(local_batch)  
+        attention_mask = np.where(local_batch != 0, 1, 0)
+        attention_mask = torch.tensor(attention_mask)
+        # tensor = createTensor(local_batch, model)
+        if torch.is_tensor(input_ids):
+            final_input_ids = torch.cat((input_ids, final_input_ids), 0)
+        else:
+            print("NOT a tensor")
+    print('Create Tensor end time: ' + str(datetime.now() - begin_time_main))
+    return final_input_ids
+
 def createTensor(padded, model):
     begin_time_main = datetime.now()
     print("Create Tensor begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
-    attention_mask = np.where(padded != 0, 1, 0)
     input_ids = torch.tensor(padded)  
+    # input_ids = torch.from_numpy(padded)
+    attention_mask = np.where(padded != 0, 1, 0)
     attention_mask = torch.tensor(attention_mask)
+    # attention_mask = torch.from_numpy(attention_mask)
 
     with torch.no_grad():
         # last_hidden_states = model(input_ids)
@@ -65,7 +104,7 @@ def padding(tokenized):
     print('Padding end time: ' + str(datetime.now() - begin_time_main))
     return padded
 
-def tokenizeText1(df, text_column_name, model_class, tokenizer_class, pretrained_weights):
+def tokenizeText1(df, labels, text_column_name, model_class, tokenizer_class, pretrained_weights):
     begin_time_main = datetime.now()
     print("tokenize begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
     # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -87,9 +126,11 @@ def tokenizeText1(df, text_column_name, model_class, tokenizer_class, pretrained
         # model.save_pretrained('./my_model/')
         # tokenizer.save_pretrained('./my_model/')
         padded = padding(tokenized)
-        result = createTensor(padded, model)
+        print('type of padded: ' + str(type(padded)))
+        tensor = batch(padded, labels, model)
+        # tensor = createTensor(padded, model)
         print('tokenize end time: ', str(datetime.now() - begin_time_main))
-        return result
+        return tensor
     except Exception:
         print("Exception in Tokenize code:")
         print("-"*60)

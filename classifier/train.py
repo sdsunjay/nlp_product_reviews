@@ -1,3 +1,6 @@
+from common import getDataFrame, tokenizeText1
+
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -181,67 +184,6 @@ def trainClassifiers1(features, labels, testing_features):
     model_name = "Passive-Aggressive"
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
-def createTensor(padded, model):
-    print('create_tensor')
-    attention_mask = np.where(padded != 0, 1, 0)
-    input_ids = torch.tensor(padded)  
-    attention_mask = torch.tensor(attention_mask)
-
-    with torch.no_grad():
-        # last_hidden_states = model(input_ids)
-        last_hidden_states = model(input_ids, attention_mask=attention_mask)    
-        # Slice the output for the first position for all the sequences, take all hidden unit outputs
-        features = last_hidden_states[0][:,0,:].numpy()        
-        print('Finished creating features')
-        return features
-
-def padding(tokenized):
-    print(len(tokenized))
-    max_len = 0
-    for i in tokenized.values:
-        if len(i) > max_len:
-            max_len = len(i)
-       
-
-    padded = np.array([i + [0] * (max_len - len(i)) for i in tokenized.values])
-    # np.array(padded).shape
-    print('Finished padding text')
-    return padded
-
-def tokenizeText1(df, text_column_name, model_class, tokenizer_class,pretrained_weights):
-    # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    # Load pretrained model/tokenizer
-    try:
-        print('Starting to tokenize ' + text_column_name)
-        # print(df.head(10))
-        # (tokenizer_class, pretrained_weights) = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-        # want RoBERTa instead of distilBERT, Uncomment the following line:
-        # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-        ## Want BERT instead of distilBERT? Uncomment the following line:
-        # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer,'bert-large-uncased')
-        model = model_class.from_pretrained(pretrained_weights)
-        tokenizer = tokenizer_class.from_pretrained(pretrained_weights, do_lower_case=True)
-        model.resize_token_embeddings(len(tokenizer))
-        tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
-
-        ### Now let's save our model and tokenizer to a directory
-        # model.save_pretrained('./my_model/')
-        # tokenizer.save_pretrained('./my_model/')
-        padded = padding(tokenized)
-        return createTensor(padded, model)
-    except Exception:
-        print("Exception in Tokenize code:")
-        print("-"*60)
-        traceback.print_exc(file=sys.stdout)
-        print("-"*60)
-        exit()
-        # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        # tokenized = tokenizer.tokenize(df[text_column_name])
-        # model.resize_token_embeddings(len(tokenizer))
-
-    print('Finished tokenizing text')
-    return (tokenized,model,tokenizer)
-
 def tokenizeText2(df, text_column_name, model_class, tokenizer_class, pretrained_weights):
     # Load pretrained model/tokenizer
     try:
@@ -274,36 +216,7 @@ def tokenizeText2(df, text_column_name, model_class, tokenizer_class, pretrained
     print('Finished tokenizing text')
     return (tokenized,model,tokenizer)
 
-def read_data(filepath):
-    """Read the CSV from disk."""
-    df = pd.read_csv(filepath, delimiter=',', index_col='ID')
-    print('Number of rows in dataframe: ' + str(len(df.index)))
-    return df
-
-def main():
-    """Main function of the program."""
-    # Specify path
-    training_filepath = 'data/clean_training1.csv'
-    # Check whether the specified path exists or not
-    isExist = os.path.exists(training_filepath)
-    if(isExist):
-        print('Reading from ' + training_filepath)
-    else:
-        print('Training file not found in the app path.')
-        exit()
-    df = read_data(training_filepath)
-    # import pdb; pdb.set_trace()
-    df = df.sample(frac=0.5).reset_index(drop=True)
-    df = df.dropna()
-    
-    # split into training, validation, and test sets
-    training, test = np.array_split(df.head(4000), 2)
-    labels = training['human_tag']   
-   
-    # When we have more time
-    # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased') 
-    model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+def testing(features):
 
     testing_filepath = 'data/clean_testing1.csv'
     # Check whether the specified path exists or not
@@ -325,12 +238,31 @@ def main():
         testing_features  = tokenizeText1(aa, 'clean_text', model_class, tokenizer_class, pretrained_weights)
         final_y_pred = trainClassifiers(features, labels, testing_features)
         values = np.concatenate((values, final_y_pred), axis=0)
+    # df1["human_tag"] = values
+    # header = ["ID", "human_tag"]
+    # output_path = 'result/MLP100' 
+    # print('Output: ' + output_path)
+    # df1.to_csv(output_path, columns = header)
 
-    df1["human_tag"] = values
-    header = ["ID", "human_tag"]
-    output_path = 'result/MLP100' 
-    print('Output: ' + output_path)
-    df1.to_csv(output_path, columns = header)
+def main():
+    """Main function of the program."""
+    
+    begin_time_main = datetime.now()
+    print("Begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
+    
+    df = getDataFrame()
+
+    # split into training, validation, and test sets
+    training, test = np.array_split(df, 2)
+    labels = training['human_tag']   
+   
+    # When we have more time
+    # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased') 
+    model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+
+
+    print("End time: " + str(datetime.now() - begin_time_main))
     
     # features = tokenizeText2(df, 'clean_text', model_class)
     # features  = tokenizeText2(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)

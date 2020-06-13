@@ -8,12 +8,13 @@ from datetime import datetime
 
 import torch
 import transformers as ppb  # pytorch transformers
-from myClass import Dataset
 
 def read_data(filepath):
     """Read the CSV from disk."""
     df = pd.read_csv(filepath, delimiter=',', index_col='ID')
+    # df = pd.read_csv(filepath, delimiter=',', skiprows = 1)
     print('Number of rows in dataframe: ' + str(len(df.index)))
+    print(df.head(5))
     return df
 
 
@@ -40,7 +41,7 @@ def batch(padded, labels, model):
     # Parameters
     params = {'batch_size': 200,
               'shuffle': False,
-              'num_workers': 6}
+              'num_workers': 8}
     max_epochs = 100
 
     # Datasets
@@ -88,12 +89,14 @@ def createTensor(padded, model):
         print('Create Tensor end time: ' + str(datetime.now() - begin_time_main))
         return features
 
+
 def padding(tokenized):
     begin_time_main = datetime.now()
     print("Padding begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
-    
-    print(len(tokenized))
+    print(type(tokenized))
+    print('tokenized length: ' + str(len(tokenized)))
     max_len = 0
+    
     for i in tokenized.values:
         if len(i) > max_len:
             max_len = len(i)

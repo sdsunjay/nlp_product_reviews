@@ -58,10 +58,10 @@ def batch(padded, labels, model):
     final_input_ids = torch.zeros(0.0,0.0)
     # Loop over epochs
     # for epoch in range(max_epochs):
-    
+
     # Training
     for local_batch in training_data:
-        input_ids = torch.tensor(local_batch)  
+        input_ids = torch.tensor(local_batch)
         attention_mask = np.where(local_batch != 0, 1, 0)
         attention_mask = torch.tensor(attention_mask)
         # tensor = createTensor(local_batch, model)
@@ -75,17 +75,11 @@ def batch(padded, labels, model):
 def createTensor(padded, model):
     begin_time_main = datetime.now()
     print("Create Tensor begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
-    input_ids = torch.tensor(padded)  
-    # input_ids = torch.from_numpy(padded)
-    attention_mask = np.where(padded != 0, 1, 0)
-    attention_mask = torch.tensor(attention_mask)
-    # attention_mask = torch.from_numpy(attention_mask)
-
+    input_ids = torch.tensor(np.array(padded))
     with torch.no_grad():
-        # last_hidden_states = model(input_ids)
-        last_hidden_states = model(input_ids, attention_mask=attention_mask)    
+        last_hidden_states = model(input_ids)
         # Slice the output for the first position for all the sequences, take all hidden unit outputs
-        features = last_hidden_states[0][:,0,:].numpy()        
+        features = last_hidden_states[0][:, 0, :].numpy()
         print('Create Tensor end time: ' + str(datetime.now() - begin_time_main))
         return features
 
@@ -93,14 +87,13 @@ def createTensor(padded, model):
 def padding(tokenized):
     begin_time_main = datetime.now()
     print("Padding begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
-    print(type(tokenized))
     print('tokenized length: ' + str(len(tokenized)))
     max_len = 0
-    
+
     for i in tokenized.values:
         if len(i) > max_len:
             max_len = len(i)
-       
+
 
     padded = np.array([i + [0] * (max_len - len(i)) for i in tokenized.values])
     # np.array(padded).shape
@@ -130,8 +123,8 @@ def tokenizeText1(df, labels, text_column_name, model_class, tokenizer_class, pr
         # tokenizer.save_pretrained('./my_model/')
         padded = padding(tokenized)
         print('type of padded: ' + str(type(padded)))
-        tensor = batch(padded, labels, model)
-        # tensor = createTensor(padded, model)
+        # tensor = batch(padded, labels, model)
+        tensor = createTensor(padded, model)
         print('tokenize end time: ', str(datetime.now() - begin_time_main))
         return tensor
     except Exception:

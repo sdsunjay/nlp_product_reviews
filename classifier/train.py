@@ -3,7 +3,6 @@ from common import getDataFrame, tokenizeText1
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 import torch
 import transformers as ppb  # pytorch transformers
 # Training the model and Testing Accuracy on Validation data
@@ -43,15 +42,16 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 
 def save_model(model, filename):
+    filename = 'model/{}.sav'.format(filename)
     print('Saving model to ' + filename)
-    # filename = 'finalized_model.sav'
-    pickle.dump(model, open(filename, 'wb'))
+    print('Skipping saving')
+    # pickle.dump(model, open(filename, 'wb'))
 
 def load_model(filename):
     # load the model from disk
     return pickle.load(open(filename, 'rb'))
 
-def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features):
+def trainClassifier(model_name, model, X_train, X_test, y_train, y_test):
     history = model.fit(X_train, y_train)
 
     print('Model: ' + model_name)
@@ -65,27 +65,22 @@ def trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing
     # evaluate predictions
     accuracy = accuracy_score(y_test, predictions)
     print("Accuracy: %.2f%%" % (accuracy * 100.0))
-    return model.predict(testing_features)
-    # save_model(model, model_name)
+    save_model(model, model_name)
 
-def trainClassifiers(features, labels, testing_features):
-    print('Starting training')
+def trainClassifiers(features, labels):
+    begin_time_train = datetime.now()
+    print("Begin training models: ", begin_time_train.strftime("%m/%d/%Y, %H:%M:%S"))
     # create training and testing vars
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
-
-    model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100))
-    model_name = 'MLP100'
-    return trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features)
-
-def trainClassifiers1(features, labels, testing_features):
-    print('Starting training')
-    # create training and testing vars
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.1)
+    X_train, X_test, y_train, y_test = train_test_split(features, labels,test_size=0.2)
 
     # Create a simple Logistic Regression classifier
-    # model_name = 'Logistic Regression (solver=lbfgs)'
-    # model = LogisticRegression(max_iter=200)
-    # trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+    model_name = 'Logistic Regression (solver=lbfgs)'
+    model = LogisticRegression(max_iter=200)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
+
+    model_name = 'MLP100'
+    model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100))
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Create a simple Logistic Regression classifier
     # model_name = 'Logistic Regression (penalty elasticnet)'
@@ -100,7 +95,7 @@ def trainClassifiers1(features, labels, testing_features):
     # XGBoost
     model = XGBClassifier()
     model_name = 'XGB'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # TODO - Fix this and make it work
     # Naive Bayes Classifier
@@ -122,99 +117,71 @@ def trainClassifiers1(features, labels, testing_features):
     # Multi-Layer Perceptron Classifier (3 layers)
     model = MLPClassifier(hidden_layer_sizes=(30,30,30))
     model_name = 'MLP3'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     model = MLPClassifier(hidden_layer_sizes=(50,50,50,50,50))
     # model_name = 'Multi-Layer Perceptron Classifier (5 layers)'
     model_name = 'MLP5'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))
     model_name = 'MLP10'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100))
     model_name = 'MLP100'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Sparse Support Vector Classifier
     model = SklearnClassifier(SVC(),sparse=False)
     model_name = 'Sparse_SVC'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Linear Support Vector Classifier
     model_name = 'Linear_SVC'
     model = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # l1 Support Vector Classifier
     model_name = 'Linear_SVC_l1'
     model = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # l2 Support Vector Classifier
     model_name = 'Linear_SVC_l2'
     model = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Train SGD with hinge penalty
     # model_name = "Stochastic Gradient Descent Classifier (hinge loss)"
     model_name = 'SGD_hinge_loss'
     model = SklearnClassifier(SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5000, tol=None))
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Train SGD with Elastic Net penalty
     model = SklearnClassifier(SGDClassifier(alpha=1e-3, random_state=42, penalty="elasticnet", max_iter=5000, tol=None))
     # model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
     model_name = 'SGD_elasticnet'
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Ridge Classifier
     model = SklearnClassifier(RidgeClassifier(alpha=0.5, tol=1e-2, solver="sag"))
     model_name = "Ridge"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Perceptron Classifier
     model = SklearnClassifier(Perceptron(max_iter=5000))
     model_name = "Perceptron"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
     # Passive-Aggressive Classifier
     model = SklearnClassifier(PassiveAggressiveClassifier(max_iter=1000))
     model_name = "Passive-Aggressive"
-    trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
+    trainClassifier(model_name, model, X_train, X_test, y_train, y_test)
 
-def tokenizeText2(df, text_column_name, model_class, tokenizer_class, pretrained_weights):
-    # Load pretrained model/tokenizer
-    try:
-        print('Starting to tokenize 2' + text_column_name)
-        # tokenizer_class, pretrained_weights = (ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-        model = model_class.from_pretrained(pretrained_weights)
-        tokenizer = tokenizer_class.from_pretrained('distilbert-base-uncased', do_lower_case=True)
-        model.resize_token_embeddings(len(tokenizer))
-        tokens = df[text_column_name].apply((lambda x: tokenizer.tokenize(x)[:511]))
-        # print(tokens)
-        tokenized = tokenizer.convert_tokens_to_ids(tokens)
-
-        # tokenized = df[text_column_name].apply((lambda x: tokenizer.encode(x,add_special_tokens=True)))
-
-        ### Now let's save our model and tokenizer to a directory
-        # model.save_pretrained('./my_model/')
-        # tokenizer.save_pretrained('./my_model/')
-        padded = padding(tokenized[:511])
-        return createTensor(padded, model)
-    except Exception:
-        print("Exception in Tokenize code:")
-        print("-"*60)
-        traceback.print_exc(file=sys.stdout)
-        print("-"*60)
-        exit()
-        # tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        # tokenized = tokenizer.tokenize(df[text_column_name])
-        # model.resize_token_embeddings(len(tokenizer))
-
-    print('Finished tokenizing text')
-    return (tokenized,model,tokenizer)
+    end_time = datetime.now()
+    print("End time: ", end_time.strftime("%m/%d/%Y, %H:%M:%S"))
+    print("End time Duration: " + str(end_time - begin_time_train))
 
 def testing(features):
 
@@ -253,7 +220,7 @@ def main():
     df = getDataFrame()
 
     # split into training, validation, and test sets
-    training, test = np.array_split(df.head(1000), 2)
+    training, test = np.array_split(df.head(200), 2)
     labels = training['human_tag']
 
     # When we have more time
@@ -263,13 +230,11 @@ def main():
     features  = tokenizeText1(training, labels, 'clean_text', model_class, tokenizer_class, pretrained_weights)
 
 
-    print("End time: " + str(datetime.now() - begin_time_main))
+    end_time = datetime.now()
+    print("End time: ", end_time.strftime("%m/%d/%Y, %H:%M:%S"))
+    print("End time Duration: " + str(end_time - begin_time_main))
 
-    # features = tokenizeText2(df, 'clean_text', model_class)
-    # features  = tokenizeText2(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
-    # trainClassifiers(features, labels)
-    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
-    # trainClassifiers(features, labels)
+    trainClassifiers(features, labels)
 
 if __name__ == "__main__":
     main()

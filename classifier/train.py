@@ -72,7 +72,7 @@ def trainClassifiers(features, labels, testing_features):
     print('Starting training')
     # create training and testing vars
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2)
-    
+
     model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100))
     model_name = 'MLP100'
     return trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features)
@@ -132,7 +132,7 @@ def trainClassifiers1(features, labels, testing_features):
     model = MLPClassifier(hidden_layer_sizes=(20,20,20,20,20,20,20,20,20,20))
     model_name = 'MLP10'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
-    
+
     model = MLPClassifier(hidden_layer_sizes=(100,100,100,100,100,100,100,100,100,100))
     model_name = 'MLP100'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
@@ -143,30 +143,30 @@ def trainClassifiers1(features, labels, testing_features):
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Linear Support Vector Classifier
-    model_name = 'Linear_SVC' 
+    model_name = 'Linear_SVC'
     model = SklearnClassifier(SVC(kernel='linear', probability=True, tol=1e-3))
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # l1 Support Vector Classifier
-    model_name = 'Linear_SVC_l1' 
+    model_name = 'Linear_SVC_l1'
     model = SklearnClassifier(LinearSVC("l1", dual=False, tol=1e-3))
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # l2 Support Vector Classifier
-    model_name = 'Linear_SVC_l2' 
+    model_name = 'Linear_SVC_l2'
     model = SklearnClassifier(LinearSVC("l2", dual=False, tol=1e-3))
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Train SGD with hinge penalty
     # model_name = "Stochastic Gradient Descent Classifier (hinge loss)"
-    model_name = 'SGD_hinge_loss' 
+    model_name = 'SGD_hinge_loss'
     model = SklearnClassifier(SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5000, tol=None))
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Train SGD with Elastic Net penalty
     model = SklearnClassifier(SGDClassifier(alpha=1e-3, random_state=42, penalty="elasticnet", max_iter=5000, tol=None))
     # model_name = "Stochastic Gradient Descent Classifier (elasticnet)"
-    model_name = 'SGD_elasticnet' 
+    model_name = 'SGD_elasticnet'
     trainClassifier(model_name, model, X_train, X_test, y_train, y_test, testing_features, df1, output_name)
 
     # Ridge Classifier
@@ -231,8 +231,8 @@ def testing(features):
     a = np.array_split(df1,8)
     i = 0
     values = []
-    for aa in a: 
-        output_name = str(i) 
+    for aa in a:
+        output_name = str(i)
         print('Run: ' + output_name)
         i += 1
         testing_features  = tokenizeText1(aa, 'clean_text', model_class, tokenizer_class, pretrained_weights)
@@ -240,35 +240,35 @@ def testing(features):
         values = np.concatenate((values, final_y_pred), axis=0)
     # df1["human_tag"] = values
     # header = ["ID", "human_tag"]
-    # output_path = 'result/MLP100' 
+    # output_path = 'result/MLP100'
     # print('Output: ' + output_path)
     # df1.to_csv(output_path, columns = header)
 
 def main():
     """Main function of the program."""
-    
+
     begin_time_main = datetime.now()
     print("Begin time: ", begin_time_main.strftime("%m/%d/%Y, %H:%M:%S"))
-    
+
     df = getDataFrame()
 
     # split into training, validation, and test sets
-    training, test = np.array_split(df, 2)
-    labels = training['human_tag']   
-   
+    training, test = np.array_split(df.head(1000), 2)
+    labels = training['human_tag']
+
     # When we have more time
-    # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased') 
+    # model_class, tokenizer_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-large-uncased')
+    # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     features  = tokenizeText1(training, labels, 'clean_text', model_class, tokenizer_class, pretrained_weights)
 
 
     print("End time: " + str(datetime.now() - begin_time_main))
-    
+
     # features = tokenizeText2(df, 'clean_text', model_class)
     # features  = tokenizeText2(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
     # trainClassifiers(features, labels)
-    # model_class, tokenizer_class, pretrained_weights = (ppb.RobertaModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
-    # features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
+    features  = tokenizeText1(training, 'clean_text', model_class, tokenizer_class, pretrained_weights)
     # trainClassifiers(features, labels)
 
 if __name__ == "__main__":

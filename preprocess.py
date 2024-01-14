@@ -10,11 +10,18 @@ import string
 
 import pickle
 import string
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
+# Download the NLTK stopwords and WordNet lemmatizer
+nltk.download('stopwords')
+nltk.download('wordnet')
 from nltk.probability import FreqDist
 
-MAX_TOKENS = 512
-MAX_WORDS = 400
+MAX_TOKENS = 1000
+MAX_WORDS = 1000
 
 def truncate(text):
     """Truncate the text."""
@@ -175,6 +182,39 @@ def removePunctuationFromList(all_words):
     all_words = [s for s in all_words if s]
     return all_words
 
+def cleanTextGPT(text):
+    """Clean up the text."""
+    try:
+        # Convert to string
+        text = str(text)
+
+        # Remove contractions
+        text = contractions(text)
+
+        # Remove HTML tags
+        html_tag_pattern = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+        text_without_html_tags = html_tag_pattern.sub('', text.strip())
+
+        # Remove non-word characters and extra whitespace
+        cleaned_text = re.sub(r'\s+', ' ', re.sub(r'\W+', ' ', text_without_html_tags))
+
+        # Remove stopwords
+        stop_words = set(stopwords.words('english'))
+        words = cleaned_text.split()
+        words = [word for word in words if word not in stop_words]
+        cleaned_text = " ".join(words)
+
+        # Lemmatize words
+        # lemmatizer = WordNetLemmatizer()
+        # words = cleaned_text.split()
+        # words = [lemmatizer.lemmatize(word) for word in words]
+        # cleaned_text = " ".join(words)
+
+        return cleaned_text
+    except Exception as e:
+        print(f"An exception occurred with: {text}\n{str(e)}")
+        return str(text)
+
 def cleanText(text):
     """Clean up the text."""
     try:
@@ -187,8 +227,8 @@ def cleanText(text):
         new_text = cleanr.sub('', text.strip())
         return re.sub(r'\s+', ' ', re.sub(r'\W+', " ", new_text))
         # TAG_RE = re.compile(r'<[^>]+>')
-    except:
-        print("An exception occurred with: " + text)
+    except Exception as e:
+        print(f"An exception occurred with: {text}\n{str(e)}")
         return str(text)
 
 def getAllWords(lines, stop_words):
@@ -208,7 +248,9 @@ def getAllWords(lines, stop_words):
         # print(str(list(all_words1.keys())[:100]))
 
         # use top 20000 words
-        return list(top_words.keys())[:20000]
+        # TODO: replace 20,000 with a variable, so this amount can be changed
+        # dynamically
+        return list(top_words.keys())[:100000]
         # word_features = list(all_words.keys())[:6000]
         # featuresets = [(find_features(rev, word_features), category)
         #        for (rev, category) in documents]
@@ -248,7 +290,7 @@ def shortenText(text, all_words):
         words = text.split()
         for word in words:
             word = word.lower()
-            if len(word) > 7:
+            if len(word) > 10:
                 if word in all_words:
                     count += 1
                     if(count == MAX_WORDS-1):
@@ -361,7 +403,8 @@ def read_data(filepath):
     all_words = getAllWords(clean_text, stop_words)
     # print('adding words in all_words')
     df['clean_text'] = [addWordsIn(line, all_words) for line in df['clean_text']]
-
+    df['clean_text'] = " " + df['clean_text'].astype(str)
+    df['clean_text'] = df['clean_text'].astype(str) + ' ->'
     # df.text = df.text.apply(lambda x: x.translate(None, string.punctuation))
     # df.clean_text = df.clean_text.apply(lambda x: x.translate(string.digits))
     # df["clean_text"] = df['text'].str.replace('[^\w\s]','')
@@ -373,9 +416,9 @@ def preprocess_file(filepath, output_path, flag):
 
     df = read_data(filepath)
     if(flag):
-        header = ["ID", "clean_text", "star_rating", 'human_tag']
+        header = ["clean_text", "star_rating", "human_tag"]
     else:
-        header = ["ID", "clean_text"]
+        header = ["clean_text", "star_rating"]
     print('Output: ' + output_path)
     df.to_csv(output_path, columns = header, index=False)
 
@@ -392,15 +435,15 @@ def main():
     else:
         print('Training file not found in the app path.')
         exit()
-    preprocess_file(training_filepath, 'data/clean_training1.csv', True)
+    preprocess_file(training_filepath, 'data/clean_training3.csv', True)
     # Check whether the specified path exists or not
-    isExist = os.path.exists(testing_filepath)
-    if(isExist):
-        print('Reading from ' + testing_filepath)
-    else:
-        print('Testing file not found in the app path.')
-        exit()
-    preprocess_file(testing_filepath,'data/clean_testing1.csv', False)
+    # isExist = os.path.exists(testing_filepath)
+    # if(isExist):
+    #    print('Reading from ' + testing_filepath)
+    # else:
+    #    print('Testing file not found in the app path.')
+    #    exit()
+    # preprocess_file(testing_filepath,'data/clean_testing1.csv', False)
 
 if __name__ == "__main__":
     main()

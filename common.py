@@ -7,21 +7,19 @@ import sys, traceback
 from datetime import datetime
 
 import torch
-import transformers as ppb  # pytorch transformers
 
 def read_data(filepath):
     """Read the CSV from disk."""
-    df = pd.read_csv(filepath, delimiter=',', index_col='ID')
+    df = pd.read_csv(filepath, delimiter=',')
     # df = pd.read_csv(filepath, delimiter=',', skiprows = 1)
     print('Number of rows in dataframe: ' + str(len(df.index)))
     print(df.head(5))
     return df
 
 
-def getDataFrame():
+def getDataFrame(training_filepath='data/clean_training1.csv'):
 
     # Specify path
-    training_filepath = 'data/clean_training1.csv'
     # Check whether the specified path exists or not
     isExist = os.path.exists(training_filepath)
     if(isExist):
@@ -137,5 +135,4 @@ def tokenizeText1(df, labels, text_column_name, model_class, tokenizer_class, pr
         # tokenized = tokenizer.tokenize(df[text_column_name])
         # model.resize_token_embeddings(len(tokenizer))
 
-    print('Finished tokenizing text')
     return (tokenized,model,tokenizer)
